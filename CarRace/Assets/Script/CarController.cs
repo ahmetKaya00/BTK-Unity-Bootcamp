@@ -22,9 +22,44 @@ public class CarController : MonoBehaviour
     public TrailRenderer rearLeftTrail;
     public TrailRenderer rearRightTrail;
 
+    public AudioSource engineSourceSound;
+    public AudioClip engineSourceClip;
+
     public float trailDuration = 3.0f; 
 
     private bool isBraking = false;
+
+    private void Start()
+    {
+        if(engineSourceSound != null && engineSourceClip != null)
+        {
+            engineSourceSound.clip = engineSourceClip;
+            engineSourceSound.loop = true;
+            engineSourceSound.Play();
+        }
+    }
+
+    void ManageEngineSound(float motor)
+    {
+        if(engineSourceSound != null)
+        {
+            if(motor != 0)
+            {
+                if (!engineSourceSound.isPlaying)
+                {
+                    engineSourceSound.Play();
+                }
+            }
+            else
+            {
+                if (engineSourceSound.isPlaying)
+                {
+                    engineSourceSound.Stop();
+                }
+            }
+        }
+        
+    }
 
     private void FixedUpdate()
     {
@@ -36,6 +71,7 @@ public class CarController : MonoBehaviour
         ApplyBrakes();
         UpdateWheelPoses();
         ManageTrails();
+        ManageEngineSound(motor);
     }
 
     private void ApplyDrive(float motor)
