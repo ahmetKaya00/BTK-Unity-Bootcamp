@@ -1,23 +1,29 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections;
 
 public class CarController : MonoBehaviour
 {
-    //WhelCollider
-    [SerializeField] private WheelCollider fronLeftWhell, fronRightWhell, rearLeftWhell, rearRightWhell;
+    public WheelCollider frontLeftWheel;
+    public WheelCollider frontRightWheel;
+    public WheelCollider rearLeftWheel;
+    public WheelCollider rearRightWheel;
 
-    //Teker transformu
-    [SerializeField] private Transform fronLeftTransform, fronRightTransform, rearLeftTransform, rearRightTransform;
-
-    //Fren Ýzi
-    [SerializeField] private TrailRenderer fronLeftTrail, fronRightTrail, rearLeftTrail, rearRightTrail;
+    public Transform frontLeftTransform;
+    public Transform frontRightTransform;
+    public Transform rearLeftTransform;
+    public Transform rearRightTransform;
 
     public float maxMotorTorque = 1500f;
     public float maxSteeringAngle = 30f;
-    public float breakeTorque = 5000f;
+    public float brakeTorque = 5000f; 
 
-    public float trailDuration = 3.0f;
+    public TrailRenderer frontLeftTrail;
+    public TrailRenderer frontRightTrail;
+    public TrailRenderer rearLeftTrail;
+    public TrailRenderer rearRightTrail;
+
+    public float trailDuration = 3.0f; 
+
     private bool isBraking = false;
 
     private void FixedUpdate()
@@ -26,111 +32,105 @@ public class CarController : MonoBehaviour
         float steering = maxSteeringAngle * Input.GetAxis("Horizontal");
 
         ApplySteering(steering);
-        ApplyDriver(motor);
-        ApplyBreak();
-
-        UpdateWhellPoses();
-        ManageTrail();
-
+        ApplyDrive(motor);
+        ApplyBrakes();
+        UpdateWheelPoses();
+        ManageTrails();
     }
 
-    void ApplyDriver(float motor)
+    private void ApplyDrive(float motor)
     {
         if (Input.GetButton("Vertical"))
         {
-            //Motor Torku uygulandý
-            rearLeftWhell.motorTorque = motor;
-            rearRightWhell.motorTorque = motor;
-
-            //fren torkunu sýfýrladým
-            rearLeftWhell.brakeTorque = 0;
-            rearRightWhell.brakeTorque = 0;
+            rearLeftWheel.motorTorque = motor;
+            rearRightWheel.motorTorque = motor;
+            rearLeftWheel.brakeTorque = 0;
+            rearRightWheel.brakeTorque = 0;
         }
         else
         {
-            rearLeftWhell.motorTorque = 0;
-            rearRightWhell.motorTorque = 0;
+            rearLeftWheel.motorTorque = 0;
+            rearRightWheel.motorTorque = 0;
         }
     }
 
-    void ApplySteering(float steering)
+    private void ApplySteering(float steering)
     {
-        fronLeftWhell.steerAngle = steering;
-        fronRightWhell.steerAngle = steering;
+        frontLeftWheel.steerAngle = steering;
+        frontRightWheel.steerAngle = steering;
     }
 
-    void ApplyBreak()
+    private void ApplyBrakes()
     {
         bool wasBraking = isBraking;
 
-        if (Input.GetKey(KeyCode.Space))
+        if (Input.GetButton("Jump")) 
         {
-            rearLeftWhell.brakeTorque = breakeTorque;
-            rearRightWhell.brakeTorque = breakeTorque;
-           fronRightWhell.brakeTorque = breakeTorque;
-           fronLeftWhell.brakeTorque = breakeTorque;
+            rearLeftWheel.brakeTorque = brakeTorque;
+            rearRightWheel.brakeTorque = brakeTorque;
+            frontLeftWheel.brakeTorque = brakeTorque;
+            frontRightWheel.brakeTorque = brakeTorque;
 
             isBraking = true;
         }
         else
         {
-            rearLeftWhell.brakeTorque = 0;
-            rearRightWhell.brakeTorque = 0;
-            fronRightWhell.brakeTorque = 0;
-            fronRightWhell.brakeTorque = 0;
+            rearLeftWheel.brakeTorque = 0;
+            rearRightWheel.brakeTorque = 0;
+            frontLeftWheel.brakeTorque = 0;
+            frontRightWheel.brakeTorque = 0;
 
             isBraking = false;
         }
-        if(wasBraking && !isBraking)
+
+        if (wasBraking && !isBraking)
         {
-            StartCoroutine(StopTrailAfterDelay(trailDuration));
+            StartCoroutine(StopTrailsAfterDelay(trailDuration));
         }
     }
 
-    void ManageTrail()
+    private void UpdateWheelPoses()
+    {
+        UpdateWheelPose(frontLeftWheel, frontLeftTransform);
+        UpdateWheelPose(frontRightWheel, frontRightTransform);
+        UpdateWheelPose(rearLeftWheel, rearLeftTransform);
+        UpdateWheelPose(rearRightWheel, rearRightTransform);
+    }
+
+    private void UpdateWheelPose(WheelCollider collider, Transform transform)
+    {
+        Vector3 pos;
+        Quaternion quat;
+        collider.GetWorldPose(out pos, out quat);
+        transform.position = pos;
+        transform.rotation = quat;
+    }
+
+    private void ManageTrails()
     {
         if (isBraking)
         {
-            fronRightTrail.emitting = true;
-            fronLeftTrail.emitting = true;
+            frontLeftTrail.emitting = true;
+            frontRightTrail.emitting = true;
             rearLeftTrail.emitting = true;
             rearRightTrail.emitting = true;
         }
         else
         {
-            fronRightTrail.emitting = false;
-            fronLeftTrail.emitting = false;
+            frontLeftTrail.emitting = false;
+            frontRightTrail.emitting = false;
             rearLeftTrail.emitting = false;
             rearRightTrail.emitting = false;
         }
     }
 
-    private IEnumerator StopTrailAfterDelay(float delay)
+    private IEnumerator StopTrailsAfterDelay(float delay)
     {
         yield return new WaitForSeconds(delay);
-        fronRightTrail.emitting = false;
-        fronLeftTrail.emitting = false;
+
+        frontLeftTrail.emitting = false;
+        frontRightTrail.emitting = false;
         rearLeftTrail.emitting = false;
         rearRightTrail.emitting = false;
     }
-
-    void UpdateWhellPoses()
-    {
-        UpdateWhellPose(fronLeftWhell, fronLeftTransform);
-        UpdateWhellPose(fronRightWhell, fronRightTransform);
-        UpdateWhellPose(rearLeftWhell, rearLeftTransform);
-        UpdateWhellPose(rearRightWhell, rearRightTransform);
-    }
-
-    void UpdateWhellPose(WheelCollider collider, Transform transform)
-    {
-        Vector3 pos;
-        Quaternion quat;
-
-        collider.GetWorldPose(out pos, out quat);
-
-        transform.position = pos;
-        transform.rotation = quat;
-    }
-
 }
