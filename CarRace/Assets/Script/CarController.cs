@@ -10,9 +10,15 @@ public class CarController : MonoBehaviour
     //Teker transformu
     [SerializeField] private Transform fronLeftTransform, fronRightTransform, rearLeftTransform, rearRightTransform;
 
+    //Fren Ýzi
+    [SerializeField] private TrailRenderer fronLeftTrail, fronRightTrail, rearLeftTrail, rearRightTrail;
+
     public float maxMotorTorque = 1500f;
     public float maxSteeringAngle = 30f;
     public float breakeTorque = 5000f;
+
+    public float trailDuration = 3.0f;
+    private bool isBraking = false;
 
     private void FixedUpdate()
     {
@@ -24,6 +30,7 @@ public class CarController : MonoBehaviour
         ApplyBreak();
 
         UpdateWhellPoses();
+        ManageTrail();
 
     }
 
@@ -54,21 +61,57 @@ public class CarController : MonoBehaviour
 
     void ApplyBreak()
     {
+        bool wasBraking = isBraking;
+
         if (Input.GetKey(KeyCode.Space))
         {
             rearLeftWhell.brakeTorque = breakeTorque;
             rearRightWhell.brakeTorque = breakeTorque;
-        }
-        else if (!Input.GetButton("Vertical"))
-        {
-            rearLeftWhell.brakeTorque = breakeTorque;
-            rearRightWhell.brakeTorque = breakeTorque;
+           fronRightWhell.brakeTorque = breakeTorque;
+           fronLeftWhell.brakeTorque = breakeTorque;
+
+            isBraking = true;
         }
         else
         {
             rearLeftWhell.brakeTorque = 0;
             rearRightWhell.brakeTorque = 0;
+            fronRightWhell.brakeTorque = 0;
+            fronRightWhell.brakeTorque = 0;
+
+            isBraking = false;
         }
+        if(wasBraking && !isBraking)
+        {
+            StartCoroutine(StopTrailAfterDelay(trailDuration));
+        }
+    }
+
+    void ManageTrail()
+    {
+        if (isBraking)
+        {
+            fronRightTrail.emitting = true;
+            fronLeftTrail.emitting = true;
+            rearLeftTrail.emitting = true;
+            rearRightTrail.emitting = true;
+        }
+        else
+        {
+            fronRightTrail.emitting = false;
+            fronLeftTrail.emitting = false;
+            rearLeftTrail.emitting = false;
+            rearRightTrail.emitting = false;
+        }
+    }
+
+    private IEnumerator StopTrailAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        fronRightTrail.emitting = false;
+        fronLeftTrail.emitting = false;
+        rearLeftTrail.emitting = false;
+        rearRightTrail.emitting = false;
     }
 
     void UpdateWhellPoses()
