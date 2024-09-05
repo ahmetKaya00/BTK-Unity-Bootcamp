@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using UnityEngine.UI;
 
 public class CarController : MonoBehaviour
 {
@@ -29,14 +30,24 @@ public class CarController : MonoBehaviour
 
     private bool isBraking = false;
 
+    public Text speedText;
+
+    private Rigidbody rb;
+
+    public float antiRoll = 500.0f;
+
     private void Start()
     {
+        rb = GetComponent<Rigidbody>();
+        speedText = GameObject.Find("Ibre").GetComponent<Text>();
         if(engineSourceSound != null && engineSourceClip != null)
         {
             engineSourceSound.clip = engineSourceClip;
             engineSourceSound.loop = true;
             engineSourceSound.Play();
         }
+
+
     }
 
     void ManageEngineSound(float motor)
@@ -72,8 +83,36 @@ public class CarController : MonoBehaviour
         UpdateWheelPoses();
         ManageTrails();
         ManageEngineSound(motor);
+
+        float speed = rb.velocity.magnitude * 3.6f;
+
+        speedText.text = "Speed: " + Mathf.RoundToInt(speed).ToString() + "km/h";
+
+        ApplyAntiRoll(frontLeftWheel, frontRightWheel);
+        ApplyAntiRoll(rearLeftWheel, rearRightWheel);
+
     }
 
+    void ApplyAntiRoll(WheelCollider leftWhell, WheelCollider rightWhell)
+    {
+        WheelHit hit;
+
+        float TravelL = 1.0f;
+        float TravelR = 1.0f;
+
+        bool groundL = leftWhell.GetGroundHit(out hit);
+        if (groundL)
+            TravelL = (-leftWhell.transform.InverseTransformPoint(hit.point).y - leftWhell.radius) / leftWhell.suspensionDistance;
+        bool groundR = rightWhell.GetGroundHit(out hit);
+        if (groundR)
+            TravelL = (-rightWhell.transform.InverseTransformPoint(hit.point).y - rightWhell.radius) / rightWhell.suspensionDistance;
+
+       float antiRollForce = (TravelL - TravelR) * antiRoll;
+        if (groundL)
+            rb.AddForceAtPosition(leftWhell.transform.up * -antiRollForce, leftWhell.transform.position);
+        if (groundR)
+            rb.AddForceAtPosition(rightWhell.transform.up * -antiRollForce, rightWhell.transform.position);
+    }
     private void ApplyDrive(float motor)
     {
         if (Input.GetButton("Vertical"))
