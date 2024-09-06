@@ -7,7 +7,7 @@ public class GameStartManager : MonoBehaviour
 {
     public CinemachineFreeLook introCamera;
     public CinemachineVirtualCamera mainCamera;
-    public GameObject playerCar;
+    public GameObject playerCar, rivalCar;
     public float rotationSpeed = 10f;
     public AudioSource countDownAudio;
 
@@ -16,12 +16,16 @@ public class GameStartManager : MonoBehaviour
     private void Start()
     {
         StartCoroutine(WaitForRaceSceneManager());
+        var aiController = rivalCar?.GetComponent<AICarController>();
+        aiController.enabled = false;
     }
 
     private IEnumerator WaitForRaceSceneManager()
     {
         yield return new WaitUntil(() => RaceSceneManager.PlayerCar != null);
         playerCar = RaceSceneManager.PlayerCar;
+        var aiController = rivalCar?.GetComponent<AICarController>();
+        aiController.enabled = true;
         StartCoroutine(IntroSequce());
     }
 
@@ -36,9 +40,14 @@ public class GameStartManager : MonoBehaviour
     private IEnumerator IntroSequce()
     {
         var carController = playerCar?.GetComponent<CarController>();
+        var aiController = rivalCar?.GetComponent<AICarController>();
+
 
         if (carController != null) {
             carController.enabled = false;
+        }
+        if (aiController != null) {
+            aiController.enabled = false;
         }
 
         introCamera.Priority = 11;
@@ -52,11 +61,13 @@ public class GameStartManager : MonoBehaviour
 
         yield return new WaitForSeconds(countDownAudio.clip.length);
 
-        playerCar.GetComponent<CarController>().enabled = true;
-
         if (carController != null)
         {
             carController.enabled = true;
+        }
+        if (aiController != null)
+        {
+            aiController.enabled = true;
         }
         mainCamera.Priority = 11;
         introCamera.Priority = 9;
