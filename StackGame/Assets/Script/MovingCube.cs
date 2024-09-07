@@ -23,16 +23,33 @@ public class MovingCube : MonoBehaviour
 
         float breakZ = transform.position.z - LastCube.transform.position.z;
 
-        SplitCubeOnZ(breakZ);
+        float direction = breakZ > 0 ? 1f : -1f;
+        SplitCubeOnZ(breakZ, direction);
     }
 
-    private void SplitCubeOnZ(float breakZ)
+    private void SplitCubeOnZ(float breakZ, float direction)
     {
         float newSize = LastCube.transform.localScale.z - Mathf.Abs(breakZ);
         float fallingBlockSize = transform.localScale.z - newSize;
         float newPosition = LastCube.transform.localPosition.z + (breakZ / 2);
         transform.localScale = new Vector3(transform.localScale.x,transform.localScale.y, newSize);
         transform.position = new Vector3(transform.position.x, transform.position.y, newPosition);
+
+        float cubeEgde = transform.position.z + (newSize / 2 * direction);
+        float fallingBlockZPos = cubeEgde + fallingBlockSize / 2 * direction;
+
+        DropCube(fallingBlockZPos, fallingBlockSize);
+    }
+
+    private void DropCube(float fallingBlockZPos, float fallingBlockSize)
+    {
+        var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        cube.transform.localScale = new Vector3(transform.localScale.x, transform.localScale.y, fallingBlockSize);
+        cube.transform.position = new Vector3(transform.position.x, transform.position.y, fallingBlockZPos);
+        
+        cube.AddComponent<Rigidbody>();
+        Destroy(cube.gameObject, 2);
+    
     }
 
     private void Update()
