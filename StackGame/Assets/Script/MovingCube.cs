@@ -15,7 +15,13 @@ public class MovingCube : MonoBehaviour
         if(LastCube == null)
             LastCube = GameObject.Find("Start").GetComponent<MovingCube>();
         currentCube = this;
+        GetComponent<Renderer>().material.color = GetRandomColor();
         
+    }
+
+    private Color GetRandomColor()
+    {
+        return new Color(Random.Range(0,1f), Random.Range(0,1f), Random.Range(0,1f));
     }
     public void Stop()
     {
@@ -25,6 +31,7 @@ public class MovingCube : MonoBehaviour
 
         float direction = breakZ > 0 ? 1f : -1f;
         SplitCubeOnZ(breakZ, direction);
+        LastCube = this;
     }
 
     private void SplitCubeOnZ(float breakZ, float direction)
@@ -48,6 +55,7 @@ public class MovingCube : MonoBehaviour
         cube.transform.position = new Vector3(transform.position.x, transform.position.y, fallingBlockZPos);
         
         cube.AddComponent<Rigidbody>();
+        cube.GetComponent<Renderer>().material.color = GetComponent<Renderer>().material.color;
         Destroy(cube.gameObject, 2);
     
     }

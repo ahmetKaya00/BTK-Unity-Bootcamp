@@ -12,7 +12,9 @@ public class GameManager : MonoBehaviour
 
             if(touch.phase == TouchPhase.Began)
             {
-                MovingCube.currentCube.Stop();
+                if(MovingCube.currentCube != null)
+                    MovingCube.currentCube.Stop();
+                FindObjectOfType<CubeRespawn>().SpawnCube();
             }
         }
     }
